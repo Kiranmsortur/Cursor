@@ -58,6 +58,12 @@ document.addEventListener('DOMContentLoaded', () => {
             body: JSON.stringify({ title, age, tone, language, openai_api_key: openAIKey })
         });
 
+        if (!response.ok) {
+            const errorData = await response.json();
+            storyDisplay.innerHTML = `<p style="color: red;">Error: ${errorData.error}</p>`;
+            return;
+        }
+
         storyData = await response.json();
         storyData.title = title;
 

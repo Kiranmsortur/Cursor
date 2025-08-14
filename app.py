@@ -1,20 +1,8 @@
 from flask import Flask, render_template, request, jsonify
 import os
-import vertexai
-from openai import OpenAI
-from vertexai.generative_models import (
-    GenerationConfig,
-    GenerativeModel,
-    HarmBlockThreshold,
-    HarmCategory,
-)
+from openai import OpenAI, APIError
 
 app = Flask(__name__)
-
-# Configure Gemini API using environment variables
-PROJECT_ID = os.environ.get("GCP_PROJECT")
-LOCATION = os.environ.get("GCP_REGION")
-vertexai.init(project=PROJECT_ID, location=LOCATION)
 
 @app.route('/')
 def index():
@@ -38,38 +26,36 @@ def generate_story_route():
 
     story_prompt = f"Write a short story for a {age}-year-old titled '{title}'. The story should have a {tone} tone and be in {language}."
 
-    # Generate story text using Google Gemini
-    text_generation_model = GenerativeModel("gemini-1.0-pro")
-    story_text = generate_text(text_generation_model, story_prompt)
+    try:
+        # Generate story text using OpenAI GPT
+        story_text = generate_text_openai(story_prompt, openai_api_key)
 
-    # Generate an image using OpenAI DALL-E 3
-    image_prompt = f"A vibrant and imaginative illustration for a children's story titled '{title}'."
-    image_url = generate_image(image_prompt, openai_api_key)
+        # Generate an image using OpenAI DALL-E 3
+        image_prompt = f"A vibrant and imaginative illustration for a children's story titled '{title}'."
+        image_url = generate_image(image_prompt, openai_api_key)
 
-    return jsonify({
-        'story_text': story_text,
-        'image_url': image_url
-    })
+        return jsonify({
+            'story_text': story_text,
+            'image_url': image_url
+        })
+    except APIError as e:
+        return jsonify({"error": f"An error occurred with the OpenAI API: {e}"}), 500
+    except Exception as e:
+        return jsonify({"error": f"An unexpected error occurred: {e}"}), 500
 
-def generate_text(model, prompt):
-    """Generates text using a Google Gemini model."""
-    generation_config = {
-        "temperature": 0.8,
-        "max_output_tokens": 2048,
-    }
-    safety_settings = {
-        HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-        HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-        HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-        HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-    }
-    responses = model.generate_content(
-        prompt,
-        generation_config=generation_config,
-        safety_settings=safety_settings,
-        stream=False,
+def generate_text_openai(prompt, api_key):
+    """Generates text using an OpenAI model."""
+    openai_client = OpenAI(api_key=api_key)
+    response = openai_client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "You are a creative storyteller for children."},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.8,
+        max_tokens=2048,
     )
-    return responses.text
+    return response.choices[0].message.content
 
 def generate_image(prompt, api_key):
     """Generates an image using OpenAI DALL-E 3."""

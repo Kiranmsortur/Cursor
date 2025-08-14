@@ -15,20 +15,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- API Key Management ---
 
     // Check if API key is already in localStorage and show the appropriate screen
-    if (localStorage.getItem('openai_api_key')) {
+    if (localStorage.getItem('gemini_api_key')) {
         apiKeyScreen.style.display = 'none';
         storyCreatorScreen.style.display = 'block';
     }
 
-    // Save the OpenAI API key to localStorage
+    // Save the Gemini API key to localStorage
     saveApiKeysButton.addEventListener('click', () => {
-        const openAIKey = document.getElementById('openai-api-key').value;
-        if (openAIKey) {
-            localStorage.setItem('openai_api_key', openAIKey);
+        const geminiKey = document.getElementById('gemini-api-key').value;
+        if (geminiKey) {
+            localStorage.setItem('gemini_api_key', geminiKey);
             apiKeyScreen.style.display = 'none';
             storyCreatorScreen.style.display = 'block';
         } else {
-            alert('Please enter your OpenAI API key.');
+            alert('Please enter your Gemini API key.');
         }
     });
 
@@ -37,11 +37,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Handle the "Generate Story" button click
     generateStoryButton.addEventListener('click', async () => {
         // Get form values
+        const model = document.getElementById('gemini-model').value;
         const title = document.getElementById('story-title').value;
         const age = document.getElementById('story-age').value;
         const tone = document.getElementById('story-tone').value;
         const language = document.getElementById('story-language').value;
-        const openAIKey = localStorage.getItem('openai_api_key');
+        const geminiKey = localStorage.getItem('gemini_api_key');
 
         if (!title || !age || !tone || !language) {
             alert('Please fill out all fields.');
@@ -55,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const response = await fetch('/generate-story', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title, age, tone, language, openai_api_key: openAIKey })
+            body: JSON.stringify({ title, age, tone, language, gemini_api_key: geminiKey, model: model })
         });
 
         if (!response.ok) {
@@ -72,7 +73,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // Create the story display elements
         storyDisplay.innerHTML = `
             <h2 id="story-title-display"></h2>
-            <img id="story-image-display" src="" alt="Generated story image" style="width:100%; display:none;">
             <div id="paginated-story"></div>
             <div id="pagination-controls" style="display: none; justify-content: space-between; margin-top: 1rem;">
                 <button id="prev-page">Previous</button>
@@ -83,7 +83,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Get the newly created elements
         const storyTitleDisplay = document.getElementById('story-title-display');
-        const storyImageDisplay = document.getElementById('story-image-display');
         const paginatedStory = document.getElementById('paginated-story');
         const paginationControls = document.getElementById('pagination-controls');
         const pageIndicator = document.getElementById('page-indicator');
@@ -92,8 +91,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Populate the story display
         storyTitleDisplay.textContent = title;
-        storyImageDisplay.src = storyData.image_url;
-        storyImageDisplay.style.display = 'block';
 
         const storyPages = storyData.story_text.split('\n\n').filter(p => p.trim() !== '');
         let currentPage = 0;

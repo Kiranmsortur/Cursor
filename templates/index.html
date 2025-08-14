@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Storyteller</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div id="api-key-screen">
+        <h1>Enter API Key</h1>
+        <p>Please enter your OpenAI API key to use the AI Storyteller.</p>
+        <input type="password" id="openai-api-key" placeholder="OpenAI API Key">
+        <button id="save-api-keys">Save Key</button>
+    </div>
+
+    <div id="story-creator-screen" style="display: none;">
+        <h1>Create a Story</h1>
+        <input type="text" id="story-title" placeholder="Story Title">
+        <input type="number" id="story-age" placeholder="Child's Age">
+        <input type="text" id="story-tone" placeholder="Story Tone (e.g., funny, adventurous)">
+        <select id="story-language">
+            <option value="English">English</option>
+            <option value="Spanish">Spanish</option>
+            <option value="French">French</option>
+            <option value="German">German</option>
+        </select>
+        <button id="generate-story">Generate Story</button>
+
+        <div id="story-display">
+            <!-- Story will be displayed here -->
+        </div>
+
+        <div id="story-controls" style="display: none;">
+            <button id="read-aloud">Read Aloud</button>
+            <button id="download-pdf">Download PDF</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
